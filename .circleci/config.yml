@@ -1,7 +1,12 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
+  aws-ecr: circleci/aws-ecr@7.0.0
+
 jobs:
-  build:
+  build-zip:
+    resource_class: large
     docker:
       - image: cimg/openjdk:11.0.11
     steps:
@@ -17,9 +22,56 @@ jobs:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - distribution/target/distribution/infinispan-server-12.1.7.Final.zip
+
+  build-docker:
+    resource_class: large
+    docker:
+      - image: cimg/python:3.8.5
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: false
+      - attach_workspace:
+          at: .
+      - aws-cli/install
+      - aws-cli/setup:
+          profile-name: default
+      - aws-cli/setup:
+          role-arn: arn:aws:iam::138476472829:role/EcrPush
+          profile-name: ecr
+      - run:
+          name: Fix AWS CLI ECR profile set up
+          command: aws configure set profile.ecr.source_profile default
+      - run:
+          name: Log into ECR
+          command: aws ecr get-login-password --region ${AWS_REGION} --profile ecr | docker login --username AWS --password-stdin ${AWS_ECR_ACCOUNT_URL}
+      - run:
+          name: Install packages for cekit
+          command: sudo apt-get update && sudo apt-get install -y libkrb5-dev
+      - run:
+          name: Install cekit
+          command: pip install cekit odcs docker docker-squash
+      - run:
+          name: Clone images repo
+          command: git clone --depth 1 --branch server-12.1.7.Final-1 https://github.com/infinispan/infinispan-images.git images
+      - run:
+          name: Build docker image
+          command: cd images/ && cekit --descriptor server-openjdk.yaml build --overrides-file ../.circleci/cekit-sectorlabs-overrides.yml docker --tag ${AWS_ECR_ACCOUNT_URL}/auth/infinispan-server:v12.1.7.sl-1
+      - run:
+          name: Push docker image
+          command: docker push ${AWS_ECR_ACCOUNT_URL}/auth/infinispan-server:v12.1.7.sl-1
 
 workflows:
   version: 2.1
   workflow:
     jobs:
-      - build
+      - build-zip
+      - build-docker:
+          requires:
+            - build-zip
+

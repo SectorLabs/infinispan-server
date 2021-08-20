@@ -1,0 +1,7 @@
+artifacts:
+- name: server
+  path: ../distribution/target/distribution/infinispan-server-12.1.7.Final.zip
+- name: postgresql-jdbc-driver
+  url: https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
+  dest: /opt/infinispan/lib
+  target: postgresql-42.2.23.jar
