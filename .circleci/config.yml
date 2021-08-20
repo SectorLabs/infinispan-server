@@ -61,17 +61,27 @@ jobs:
           command: git clone --depth 1 --branch server-12.1.7.Final-1 https://github.com/infinispan/infinispan-images.git images
       - run:
           name: Build docker image
-          command: cd images/ && cekit --descriptor server-openjdk.yaml build --overrides-file ../.circleci/cekit-sectorlabs-overrides.yml docker --tag ${AWS_ECR_ACCOUNT_URL}/auth/infinispan-server:v12.1.7.sl-1
+          command: cd images/ && cekit --descriptor server-openjdk.yaml build --overrides-file ../.circleci/cekit-sectorlabs-overrides.yml docker --tag ${AWS_ECR_ACCOUNT_URL}/auth/infinispan-server:$CIRCLE_TAG
       - run:
           name: Push docker image
-          command: docker push ${AWS_ECR_ACCOUNT_URL}/auth/infinispan-server:v12.1.7.sl-1
+          command: docker push ${AWS_ECR_ACCOUNT_URL}/auth/infinispan-server:$CIRCLE_TAG
 
 workflows:
   version: 2.1
   workflow:
     jobs:
-      - build-zip
+      - build-zip:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              ignore: main
+
       - build-docker:
           requires:
             - build-zip
-
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
