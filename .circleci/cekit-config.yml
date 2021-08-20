@@ -21,6 +21,9 @@
     path: /opt/config-generator
   - name: server
     url: https://downloads.jboss.org/infinispan/12.1.7.Final/infinispan-server-12.1.7.Final.zip
+  - name: postgresql-jdbc-driver
+    url: https://jdbc.postgresql.org/download/postgresql-42.2.23.jar
+    path: /opt/infinispan/lib/postgresql-42.2.23.jar
   packages:
     manager: microdnf
   ports:
