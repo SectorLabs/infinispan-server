@@ -73,7 +73,7 @@ workflows:
       - build-zip:
           filters:
             tags:
-              ignore: /.*/
+              only: /^v.*/
             branches:
               ignore: main
 
