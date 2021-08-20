@@ -4,7 +4,7 @@ Infinispan is an open source (under the [Apache License, v2.0](http://www.apache
 including HOWTOs, getting started guides, build instructions and downloading binaries, visit the project's website on
 [http://www.infinispan.org](http://www.infinispan.org "The Infinispan project page")
 
-# Fork
+## Fork
 We (Sector Labs) forked this repository to set up a pipeline that builds a Docker image with the PostgreSQL JDBC driver built-in. It also allows us to quickly apply patches and release the patched version across our servers. This fork contains no other changes at the time of writing.
 
 The build pipeline is triggered when a Git tag is added. The pipeline will build a new Docker image with the tag and push it to our AWS ECR registry. Pull requests trigger a build, but does not push the Docker image.
